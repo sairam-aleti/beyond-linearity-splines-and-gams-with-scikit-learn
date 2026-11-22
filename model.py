@@ -1,0 +1,73 @@
+"""
+Beyond Linearity: Splines and GAMs with Scikit-Learn
+
+Assembled from your step-by-step solutions.
+"""
+
+import numpy as np
+
+# Step 1 - load_wage
+import os
+import tempfile
+import urllib.request
+import pandas as pd
+
+WAGE_URL = "https://raw.githubusercontent.com/intro-stat-learning/ISLP/main/ISLP/data/Wage.csv"
+
+def load_wage():
+    path = os.path.join(tempfile.gettempdir(), "Wage.csv")
+
+    if not os.path.exists(path):
+        urllib.request.urlretrieve(WAGE_URL, path)
+
+    return pd.read_csv(path)
+
+
+def describe_wage(df):
+    return {
+        'n': len(df),
+        'columns': list(df.columns),
+        'age_range': (int(df['age'].min()), int(df['age'].max())),
+        'wage_mean': round(df['wage'].mean(), 2),
+        'n_education_levels': df['education'].nunique()
+    }
+
+# Step 2 - split_wage (not yet solved)
+# TODO: implement
+
+# Step 3 - cv_tools (not yet solved)
+# TODO: implement
+
+# Step 4 - polynomial_regression (not yet solved)
+# TODO: implement
+
+# Step 5 - step_functions (not yet solved)
+# TODO: implement
+
+# Step 6 - spline_regression (not yet solved)
+# TODO: implement
+
+# Step 7 - extrapolation (not yet solved)
+# TODO: implement
+
+# Step 8 - smoothing_spline (not yet solved)
+# TODO: implement
+
+# Step 9 - local_smoother (not yet solved)
+# TODO: implement
+
+# Step 10 - gam_pipeline (not yet solved)
+# TODO: implement
+
+# Step 11 - partial_effects (not yet solved)
+# TODO: implement
+
+# Step 12 - logistic_gam (not yet solved)
+# TODO: implement
+
+# Step 13 - fit_age_models (not yet solved)
+# TODO: implement
+
+# Step 14 - test_comparison (not yet solved)
+# TODO: implement
+
