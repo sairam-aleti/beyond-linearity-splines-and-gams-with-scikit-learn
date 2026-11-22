@@ -57,8 +57,60 @@ def age_grid(lo=18, hi=80, n=63):
         'age': np.linspace(lo, hi, n)
     })
 
-# Step 3 - cv_tools (not yet solved)
-# TODO: implement
+# Step 3 - cv_tools
+import numpy as np
+from sklearn.model_selection import cross_val_score
+
+def cv_mse(model, X, y, cv):
+    scores = cross_val_score(
+        model,
+        X,
+        y,
+        cv=cv,
+        scoring='neg_mean_squared_error'
+    )
+
+    # Convert negative MSE scores to positive MSE
+    fold_mses = -scores
+
+    mean = np.mean(fold_mses)
+    se = np.std(fold_mses, ddof=1) / np.sqrt(len(fold_mses))
+
+    return round(mean, 1), round(se, 1)
+
+
+def cv_curve(make_model, X, y, values, cv):
+    means = []
+    ses = []
+
+    for value in values:
+        model = make_model(value)
+        mean, se = cv_mse(model, X, y, cv)
+
+        means.append(mean)
+        ses.append(se)
+
+    return means, ses
+
+
+def one_se_rule(values, means, ses, prefer='smaller'):
+    # Find the best (lowest) cross-validation MSE
+    best_idx = np.argmin(means)
+    threshold = means[best_idx] + ses[best_idx]
+
+    # Select values within one standard error of the best
+    eligible = [
+        value
+        for value, mean in zip(values, means)
+        if mean <= threshold
+    ]
+
+    if prefer == 'smaller':
+        return min(eligible)
+    elif prefer == 'larger':
+        return max(eligible)
+    else:
+        raise ValueError("prefer must be 'smaller' or 'larger'")
 
 # Step 4 - polynomial_regression (not yet solved)
 # TODO: implement
