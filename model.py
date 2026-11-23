@@ -112,8 +112,66 @@ def one_se_rule(values, means, ses, prefer='smaller'):
     else:
         raise ValueError("prefer must be 'smaller' or 'larger'")
 
-# Step 4 - polynomial_regression (not yet solved)
-# TODO: implement
+# Step 4 - polynomial_regression
+import numpy as np
+from scipy.stats import f as f_dist
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+
+def poly_model(degree):
+    return make_pipeline(
+        StandardScaler(),
+        PolynomialFeatures(degree, include_bias=False),
+        LinearRegression()
+    )
+
+
+def poly_curve(X, y, degrees, cv):
+    return cv_curve(poly_model, X, y, degrees, cv)
+
+
+def anova_degrees(X, y, max_degree):
+    n = len(y)
+    results = []
+
+    for d in range(2, max_degree + 1):
+        model_prev = poly_model(d - 1)
+        model_curr = poly_model(d)
+
+        model_prev.fit(X, y)
+        model_curr.fit(X, y)
+
+        rss_prev = np.sum((y - model_prev.predict(X)) ** 2)
+        rss_curr = np.sum((y - model_curr.predict(X)) ** 2)
+
+        F = ((rss_prev - rss_curr) / 1) / (rss_curr / (n - d - 1))
+        p = f_dist.sf(F, 1, n - d - 1)
+
+        results.append((d, round(F, 2), round(p, 4)))
+
+    return results
+
+
+def choose_degree(X, y, degrees, cv, alpha=0.05):
+    means, ses = poly_curve(X, y, degrees, cv)
+
+    degree_min = degrees[np.argmin(means)]
+
+    anova_results = anova_degrees(X, y, max(degrees))
+
+    degree_anova = 1
+    for d, F, p in anova_results:
+        if p < alpha:
+            degree_anova = d
+        else:
+            break
+
+    return degree_min, degree_anova
+
+
+def curve_on_grid(model, grid):
+    return np.round(model.predict(grid).ravel(), 2)
 
 # Step 5 - step_functions (not yet solved)
 # TODO: implement
