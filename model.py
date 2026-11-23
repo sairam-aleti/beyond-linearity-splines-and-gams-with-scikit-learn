@@ -173,8 +173,44 @@ def choose_degree(X, y, degrees, cv, alpha=0.05):
 def curve_on_grid(model, grid):
     return np.round(model.predict(grid).ravel(), 2)
 
-# Step 5 - step_functions (not yet solved)
-# TODO: implement
+# Step 5 - step_functions
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import KBinsDiscretizer
+
+def step_model(n_bins):
+    return make_pipeline(
+        KBinsDiscretizer(
+            n_bins=n_bins,
+            encode='onehot-dense',
+            strategy='uniform'
+        ),
+        LinearRegression()
+    )
+
+
+def step_curve(X, y, bins, cv):
+    return cv_curve(step_model, X, y, bins, cv)
+
+
+def choose_bins(X, y, bins, cv):
+    means, ses = step_curve(X, y, bins, cv)
+
+    bins_min = bins[np.argmin(means)]
+    bins_1se = one_se_rule(bins, means, ses, prefer='smaller')
+
+    return bins_min, bins_1se
+
+
+def bin_edges(model):
+    discretizer = model.named_steps['kbinsdiscretizer']
+    return np.round(discretizer.bin_edges_[0], 1).tolist()
+
+
+def step_levels(model, grid):
+    predictions = model.predict(grid)
+    return sorted(np.round(np.unique(predictions), 1).tolist())
 
 # Step 6 - spline_regression (not yet solved)
 # TODO: implement
