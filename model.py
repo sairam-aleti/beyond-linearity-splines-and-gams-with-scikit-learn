@@ -253,8 +253,51 @@ def choose_knots(X, y, knot_counts, cv):
 
     return k_min, k_1se
 
-# Step 7 - extrapolation (not yet solved)
-# TODO: implement
+# Step 7 - extrapolation
+import numpy as np
+import pandas as pd
+
+def beyond_data(models, ages):
+    """Return rounded predictions for each fitted model at the given ages."""
+
+    X_new = pd.DataFrame({"age": ages})
+
+    results = {}
+    for name, model in models.items():
+        predictions = model.predict(X_new)
+        results[name] = np.round(predictions, 1).tolist()
+
+    return results
+
+
+def extrapolation_report(X, y, ages):
+    """Compare polynomial and spline extrapolations."""
+
+    # Fit the three models
+    poly4 = poly_model(4)
+    spline_const = spline_model(5)
+    spline_linear = spline_model(5, extrapolation='linear')
+
+    poly4.fit(X, y)
+    spline_const.fit(X, y)
+    spline_linear.fit(X, y)
+
+    # Generate predictions
+    models = {
+        "poly4": poly4,
+        "spline_const": spline_const,
+        "spline_linear": spline_linear
+    }
+
+    results = beyond_data(models, ages)
+
+    # Calculate polynomial prediction range
+    poly_predictions = results["poly4"]
+    results["poly4_range"] = round(
+        max(poly_predictions) - min(poly_predictions), 1
+    )
+
+    return results
 
 # Step 8 - smoothing_spline (not yet solved)
 # TODO: implement
