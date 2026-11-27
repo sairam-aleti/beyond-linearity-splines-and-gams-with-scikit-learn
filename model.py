@@ -450,8 +450,76 @@ def gam_feature_count(model, X):
     preprocessor = model.named_steps['columntransformer']
     return preprocessor.transform(X).shape[1]
 
-# Step 11 - partial_effects (not yet solved)
-# TODO: implement
+# Step 11 - partial_effects
+import numpy as np
+import pandas as pd
+
+def partial_effect(model, X, column, grid_values):
+    # Create baseline values: median for numeric, mode for categorical
+    baseline = {}
+
+    for col in X.columns:
+        if pd.api.types.is_numeric_dtype(X[col]):
+            baseline[col] = X[col].median()
+        else:
+            baseline[col] = X[col].mode().iloc[0]
+
+    # Build prediction frame
+    frame = pd.DataFrame(
+        [baseline.copy() for _ in range(len(grid_values))]
+    )
+    frame[column] = grid_values
+
+    # Predict and center
+    predictions = model.predict(frame)
+    effects = predictions - predictions.mean()
+
+    return np.round(effects, 2)
+
+
+def education_effect(model, X):
+    levels = sorted(X['education'].dropna().unique())
+
+    effects = partial_effect(
+        model,
+        X,
+        'education',
+        levels
+    )
+
+    return {
+        level: float(effect)
+        for level, effect in zip(levels, effects)
+    }
+
+
+def gam_summary(model, X):
+    # Age effect
+    age_effects = partial_effect(
+        model,
+        X,
+        'age',
+        age_grid()['age']
+    )
+
+    # Year effect
+    year_effects = partial_effect(
+        model,
+        X,
+        'year',
+        np.arange(2003, 2010)
+    )
+
+    # Education effect
+    edu_effects = education_effect(model, X)
+
+    return {
+        'age_range': round(float(np.max(age_effects) - np.min(age_effects)), 1),
+        'year_range': round(float(np.max(year_effects) - np.min(year_effects)), 1),
+        'education_range': round(
+            float(max(edu_effects.values()) - min(edu_effects.values())), 1
+        )
+    }
 
 # Step 12 - logistic_gam (not yet solved)
 # TODO: implement
